@@ -8,57 +8,18 @@ import { useEffectAfterMount } from "./hooks/useEffectAfterMount";
 import styles from "./index.css";
 
 /** ====================================
-   *      🔰 MediumClap
-  ==================================== **/
-const MediumClapContext = createContext();
-const { Provider } = MediumClapContext;
-
-const MediumClap = ({ children, className = "", style: userStyles = {} }) => {
-  const [{ clapRef, clapCountRef, clapTotalRef }, setRef] = useDomRef();
-  const { clapState, updateClapState } = useClapState();
-  const animationTimeline = useClapAnimation({
-    duration: 300,
-    bounceEl: clapCountRef,
-    fadeEl: clapTotalRef,
-    burstEl: clapRef,
-  });
-  const { count, countTotal, isClicked } = clapState;
-
-  useEffectAfterMount(() => {
-    animationTimeline.replay();
-  }, [count]);
-
-  const memoizedValue = useMemo(() => {
-    return {
-      ...clapState,
-      setRef,
-    };
-  }, [clapState, setRef]);
-
-  const classNames = [styles.clap, className].join(" ").trim();
-
-  return (
-    <Provider value={memoizedValue}>
-      <button
-        ref={setRef}
-        data-refkey="clapRef"
-        onClick={updateClapState}
-        className={classNames}
-        style={userStyles}
-      >
-        {children}
-      </button>
-    </Provider>
-  );
-};
-
-/** ====================================
    *      🔰SubComponents
   Smaller Component used by <MediumClap />
   ==================================== **/
-
-const ClapIcon = ({ className = "", style: userStyles = {} }) => {
-  const { isClicked } = useContext(MediumClapContext);
+const ClapContainer = ({ children, setRef, className, style, ...rest }) => {
+  const classNames = [styles.clap, className].join(" ").trim();
+  return (
+    <button ref={setRef} className={classNames} style={style} {...rest}>
+      {children}
+    </button>
+  );
+};
+const ClapIcon = ({ isClicked, className = "", style: userStyles = {} }) => {
   const classNames = [styles.icon, isClicked ? styles.checked : "", className]
     .join(" ")
     .trim();
@@ -78,40 +39,40 @@ const ClapIcon = ({ className = "", style: userStyles = {} }) => {
     </span>
   );
 };
-const ClapCount = ({ className = "", style: userStyles = {} }) => {
-  const { count, setRef } = useContext(MediumClapContext);
+const ClapCount = ({
+  setRef,
+  className = "",
+  style: userStyles = {},
+  ...rest
+}) => {
   const classNames = [styles.count, className].join(" ").trim();
+  const { count } = rest;
 
   return (
-    <span
-      ref={setRef}
-      data-refkey="clapCountRef"
-      className={classNames}
-      style={userStyles}
-    >
+    <span ref={setRef} className={classNames} style={userStyles} {...rest}>
       +{count}
     </span>
   );
 };
-const CountTotal = ({ className = "", style: userStyles = {} }) => {
-  const { countTotal, setRef } = useContext(MediumClapContext);
+const CountTotal = ({
+  countTotal,
+  setRef,
+  className = "",
+  style: userStyles = {},
+  ...rest
+}) => {
   const classNames = [styles.total, className].join(" ").trim();
 
   return (
-    <span
-      ref={setRef}
-      data-refkey="clapTotalRef"
-      className={classNames}
-      style={userStyles}
-    >
+    <span ref={setRef} className={classNames} style={userStyles} {...rest}>
       {countTotal}
     </span>
   );
 };
 
-MediumClap.Icon = ClapIcon;
-MediumClap.Count = ClapCount;
-MediumClap.Total = CountTotal;
+// MediumClap.Icon = ClapIcon;
+// MediumClap.Count = ClapCount;
+// MediumClap.Total = CountTotal;
 
 /** ====================================
       *        🔰USAGE
@@ -119,22 +80,45 @@ MediumClap.Total = CountTotal;
       may consume the component API
   ==================================== **/
 const Usage = () => {
-  return (
-    <section
-      style={{ display: "flex", justifyContent: "space-around", width: "60vw" }}
-    >
-      <MediumClap>
-        <MediumClap.Icon />
-        <MediumClap.Count />
-        <MediumClap.Total />
-      </MediumClap>
+  const [{ clapRef, clapCountRef, clapTotalRef }, setRef] = useDomRef();
+  const { clapState, getTogglerProps, getCounterProps } = useClapState();
+  const animationTimeline = useClapAnimation({
+    duration: 300,
+    bounceEl: clapCountRef,
+    fadeEl: clapTotalRef,
+    burstEl: clapRef,
+  });
+  const { count, countTotal, isClicked } = clapState;
 
-      <MediumClap className={styles.clap}>
-        <MediumClap.Icon />
-        <MediumClap.Count />
-        <MediumClap.Total />
-      </MediumClap>
-    </section>
+  useEffectAfterMount(() => {
+    animationTimeline.replay();
+  }, [count]);
+
+  const memoizedValue = useMemo(() => {
+    return {
+      ...clapState,
+      setRef,
+    };
+  }, [clapState, setRef]);
+
+  const handleClick = () => {
+    console.log('CLICKED!!!')
+  }
+
+  // const classNames = [styles.clap, className].join(" ").trim();
+  return (
+    <ClapContainer setRef={setRef} data-refkey="clapRef" {...getTogglerProps({
+      onClick: handleClick,
+      'aria-pressed': false
+    })}>
+      <ClapIcon isClicked={isClicked} />
+      <ClapCount data-refkey="clapCountRef" setRef={setRef} {...getCounterProps()} />
+      <CountTotal
+        countTotal={countTotal}
+        data-refkey="clapTotalRef"
+        setRef={setRef}
+      />
+    </ClapContainer>
   );
 };
 
