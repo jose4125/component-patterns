@@ -31,6 +31,35 @@ export const useClapState = (initialState = INIT_STATE) => {
     });
   }, [count, countTotal]);
 
+  const togglerProps = {
+    onClick: updateClapState,
+    "aria-pressed": clapState.isClicked,
+  };
+
+  const counterProps = {
+    count,
+    "aria-valuemax": MAXIMUM_USER_CLAP,
+    "aria-valuemin": 0,
+    "aria-valuenow": count,
+  };
+
+  return { clapState, updateClapState, togglerProps, counterProps };
+};
+
+export const useClapStateGetProps = (initialState = INIT_STATE) => {
+  const [clapState, setClapState] = useState(initialState);
+  const { count, countTotal } = clapState;
+
+  const updateClapState = useCallback(() => {
+    setClapState(({ count, countTotal }) => {
+      return {
+        count: Math.min(count + 1, MAXIMUM_USER_CLAP),
+        countTotal: count < MAXIMUM_USER_CLAP ? countTotal + 1 : countTotal,
+        isClicked: true,
+      };
+    });
+  }, [count, countTotal]);
+
   const getTogglerProps = ({onClick, ...otherProps}) => ({
     onClick: callFunctionsInSequence(updateClapState, onClick),
     "aria-pressed": clapState.isClicked,

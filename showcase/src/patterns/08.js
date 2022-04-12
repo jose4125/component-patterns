@@ -1,6 +1,7 @@
+
 import React, { useContext, useMemo, createContext } from "react";
 
-import { useClapState } from "./hooks/useClapState";
+import { useClapStateGetProps } from "./hooks/useClapState";
 import { useClapAnimation } from "./hooks/useClapAnimation";
 import { useDomRef } from "./hooks/useDomRef";
 import { useEffectAfterMount } from "./hooks/useEffectAfterMount";
@@ -81,7 +82,7 @@ const CountTotal = ({
   ==================================== **/
 const Usage = () => {
   const [{ clapRef, clapCountRef, clapTotalRef }, setRef] = useDomRef();
-  const { clapState, togglerProps, counterProps } = useClapState();
+  const { clapState, getTogglerProps, getCounterProps } = useClapStateGetProps();
   const animationTimeline = useClapAnimation({
     duration: 300,
     bounceEl: clapCountRef,
@@ -101,11 +102,18 @@ const Usage = () => {
     };
   }, [clapState, setRef]);
 
+  const handleClick = () => {
+    console.log('CLICKED!!!')
+  }
+
   // const classNames = [styles.clap, className].join(" ").trim();
   return (
-    <ClapContainer setRef={setRef} data-refkey="clapRef" {...togglerProps}>
+    <ClapContainer setRef={setRef} data-refkey="clapRef" {...getTogglerProps({
+      onClick: handleClick,
+      'aria-pressed': false
+    })}>
       <ClapIcon isClicked={isClicked} />
-      <ClapCount data-refkey="clapCountRef" setRef={setRef} {...counterProps} />
+      <ClapCount data-refkey="clapCountRef" setRef={setRef} {...getCounterProps()} />
       <CountTotal
         countTotal={countTotal}
         data-refkey="clapTotalRef"
