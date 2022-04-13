@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 
 import { generateRandomNumber } from "../../utils/generateRandomNumber";
+import { usePrevious } from './usePrevious.js'
 
 const MAXIMUM_USER_CLAP = 10;
 const INIT_STATE = {
@@ -46,9 +47,15 @@ export const useClapState = (initialState = INIT_STATE) => {
   return { clapState, updateClapState, togglerProps, counterProps };
 };
 
+
+/** ====================================
+      *        🔰HOOK
+      Getter props
+  ==================================== **/
 export const useClapStateGetProps = (initialState = INIT_STATE) => {
   const [clapState, setClapState] = useState(initialState);
   const { count, countTotal } = clapState;
+  const userInitialState = useRef(initialState)
 
   const updateClapState = useCallback(() => {
     setClapState(({ count, countTotal }) => {
@@ -59,6 +66,15 @@ export const useClapStateGetProps = (initialState = INIT_STATE) => {
       };
     });
   }, [count, countTotal]);
+
+  const resetRef = useRef(0)
+  const prevCount = usePrevious(count)
+  const reset = useCallback(() => {
+    if(prevCount !== count) {
+      setClapState(userInitialState.current)
+      resetRef.current++
+    }
+  }, [setClapState, prevCount, count])
 
   const getTogglerProps = ({onClick, ...otherProps}) => ({
     onClick: callFunctionsInSequence(updateClapState, onClick),
@@ -74,5 +90,5 @@ export const useClapStateGetProps = (initialState = INIT_STATE) => {
     ...otherProps
   });
 
-  return { clapState, updateClapState, getTogglerProps, getCounterProps };
+  return { clapState, updateClapState, getTogglerProps, getCounterProps, reset, resetDep: resetRef.current };
 };
